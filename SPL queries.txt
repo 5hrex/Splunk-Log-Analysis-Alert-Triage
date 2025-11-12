@@ -1,0 +1,30 @@
+# SPL Queries for Splunk Log Analysis & Triage
+
+## 1. Failed Login Attempts (EventCode 4625)
+index=windows EventCode=4625
+| stats count by Account_Name, Source_Network_Address
+| sort - count
+
+## 2. Successful Login Attempts (EventCode 4624)
+index=windows EventCode=4624
+| stats count by Account_Name, Logon_Type
+| sort - count
+
+## 3. Brute Force Detection (More than 10 failed logins)
+index=windows EventCode=4625
+| stats count by Account_Name, Source_Network_Address
+| where count > 10
+
+## 4. Login Trend Over Time
+index=windows (EventCode=4624 OR EventCode=4625)
+| timechart count by EventCode
+
+## 5. Unusual DNS Queries
+index=windows sourcetype=WinEventLog
+| search QueryName="*.xyz" OR QueryName="*.top"
+| stats count by QueryName, ClientIP
+
+## 6. Suspicious Process Execution
+index=windows EventCode=4688
+| search New_Process_Name="*powershell.exe*" OR New_Process_Name="*cmd.exe*"
+| stats count by Account_Name, New_Process_Name
